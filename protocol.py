@@ -29,7 +29,7 @@ class Protocol:
       
 
         hash = hashlib.sha256(str.encode(json.dumps(authmessage.__dict__))).hexdigest()
-        payload= Payload(hash)
+        payload= Payload(hash,"AUTH")
         jsonStr = json.dumps(payload.__dict__)
         print("jsonStr is ", jsonStr)
         return jsonStr
@@ -38,7 +38,18 @@ class Protocol:
     # Checking if a received message is part of your protocol (called from app.py)
     # TODO: IMPLMENET THE LOGIC
     def IsMessagePartOfProtocol(self, message):
+        received = json.loads(message)
+        type = received["type"]
+        if(type=="AUTH"):
+            return True
+        return False
         
+
+
+    # Processing protocol message
+    # TODO: IMPLMENET THE LOGIC (CALL SetSessionKey ONCE YOU HAVE THE KEY ESTABLISHED)
+    # THROW EXCEPTION IF AUTHENTICATION FAILS
+    def ProcessReceivedProtocolMessage(self, message):
         received = json.loads(message)
         msg_val = received["msg"]
         crc_val = received["crc"] 
@@ -71,15 +82,6 @@ class Protocol:
             
         print("NOT part of auth")
         return False
-
-
-    # Processing protocol message
-    # TODO: IMPLMENET THE LOGIC (CALL SetSessionKey ONCE YOU HAVE THE KEY ESTABLISHED)
-    # THROW EXCEPTION IF AUTHENTICATION FAILS
-    def ProcessReceivedProtocolMessage(self, message):
-        pass
-
-
     # Setting the key for the current session
     # TODO: MODIFY AS YOU SEEM FIT
     def SetSessionKey(self, key):

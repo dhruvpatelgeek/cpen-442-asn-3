@@ -1,8 +1,10 @@
 import zlib
 import hashlib
+import enum
 
 class Payload:
-    def __init__(self,msg):
+    def __init__(self,msg,type):
+          self.type=type
           self.msg = msg
           self.crc = zlib.crc32(str.encode(msg))
 
@@ -26,3 +28,6 @@ class nackMessage:
         self.timeStamp = timeStamp # unix.now()<mins,secs dropped>
        
 
+class MsgType(enum.Enum):
+    AUTH = 1
+    CIPHER = 2
