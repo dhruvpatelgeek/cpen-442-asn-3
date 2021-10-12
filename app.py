@@ -6,6 +6,7 @@ import pygubu
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
+import json
 
 # local import from "protocol.py"
 from protocol import Protocol
@@ -51,7 +52,7 @@ class Assignment3VPN:
         self.receive_thread = Thread(target=self._ReceiveMessages, daemon=True)
         
         # Creating a protocol object
-        self.prtcl = Protocol()
+        self.prtcl = Protocol(self.secretEntry.get())
      
     # Distructor     
     def __del__(self):
@@ -179,7 +180,7 @@ class Assignment3VPN:
         self.secureButton["state"] = "disabled"
 
         # TODO: THIS IS WHERE YOU SHOULD IMPLEMENT THE START OF YOUR MUTUAL AUTHENTICATION AND KEY ESTABLISHMENT PROTOCOL, MODIFY AS YOU SEEM FIT
-        init_message = self.prtcl.GetProtocolInitiationMessage()
+        init_message = self.prtcl.GetProtocolInitiationMessage(self.secretEntry.get())
         self._SendMessage(init_message)
 
 
