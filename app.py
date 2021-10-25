@@ -142,24 +142,24 @@ class Assignment3VPN:
         while True:
             try:
                 # Receiving all the data
-                cipher_text = self.conn.recv(4096)
+                data = self.conn.recv(4096)
 
                 # Check if socket is still open
-                if cipher_text == None or len(cipher_text) == 0:
+                if data == None or len(data) == 0:
                     self._AppendLog("RECEIVER_THREAD: Received empty message")
                     break
 
                 # Checking if the received message is part of your protocol
                 # TODO: MODIFY THE INPUT ARGUMENTS AND LOGIC IF NECESSARY
-                if self.prtcl.IsMessagePartOfProtocol(cipher_text):
+                if self.prtcl.IsMessagePartOfProtocol(data):
                     # Disabling the button to prevent repeated clicks
                     self.secureButton["state"] = "disabled"
                     # Processing the protocol message
-                    self.prtcl.ProcessReceivedProtocolMessage(cipher_text)
+                    self.prtcl.ProcessReceivedProtocolMessage(data)
 
                 # Otherwise, decrypting and showing the messaage
                 else:
-                    plain_text = self.prtcl.DecryptAndVerifyMessage(cipher_text)
+                    plain_text = self.prtcl.DecryptAndVerifyMessage(data)
                     self._AppendMessage("Other: {}".format(plain_text.decode()))
                     
             except Exception as e:
@@ -169,9 +169,9 @@ class Assignment3VPN:
 
     # Send data to the other party
     def _SendMessage(self, message):
-        plain_text = message
-        cipher_text = self.prtcl.EncryptAndProtectMessage(plain_text)
-        self.conn.send(cipher_text.encode())
+        plain_text = message.encode()
+        data = self.prtcl.EncryptAndProtectMessage(plain_text)
+        self.conn.send(data)
             
 
     # Secure connection with mutual authentication and key establishment

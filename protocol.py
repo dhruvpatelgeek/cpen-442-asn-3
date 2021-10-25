@@ -3,13 +3,15 @@ from msg import *
 import hashlib
 import datetime, time
 import json
+from Crypto.Cipher import AES # pip install pycryptodome
 
 class Protocol:
 
     # Initializer (Called from app.py)
     # TODO: MODIFY ARGUMENTS AND LOGIC AS YOU SEEM FIT
     def __init__(self, secretKey):
-        self._key = None
+        self.max_bytes = 16                             # Max number of bytes for nonce length and tag length
+        self._key = b"QeThWmYq3t6w9z$C&F)J@NcRfUjXn2r4" # AES key should be 128, 192, or 256 bits long
         self.hashFunc = hashlib.sha256()
         self.secretKey=secretKey
         pass
@@ -38,13 +40,13 @@ class Protocol:
     # Checking if a received message is part of your protocol (called from app.py)
     # TODO: IMPLMENET THE LOGIC
     def IsMessagePartOfProtocol(self, message):
+        return False
         received = json.loads(message)
         type = received["type"]
         if(type=="AUTH"):
             return True
         return False
         
-
 
     # Processing protocol message
     # TODO: IMPLMENET THE LOGIC (CALL SetSessionKey ONCE YOU HAVE THE KEY ESTABLISHED)
@@ -82,6 +84,8 @@ class Protocol:
             
         print("NOT part of auth")
         return False
+    
+    
     # Setting the key for the current session
     # TODO: MODIFY AS YOU SEEM FIT
     def SetSessionKey(self, key):
@@ -93,13 +97,50 @@ class Protocol:
     # TODO: IMPLEMENT ENCRYPTION WITH THE SESSION KEY (ALSO INCLUDE ANY NECESSARY INFO IN THE ENCRYPTED MESSAGE FOR INTEGRITY PROTECTION)
     # RETURN AN ERROR MESSAGE IF INTEGRITY VERITIFCATION OR AUTHENTICATION FAILS
     def EncryptAndProtectMessage(self, plain_text):
-        cipher_text = plain_text
-        return cipher_text
+        
+        # Encrypt the plaintext using AES in EAX mode
+        cipher = AES.new(self._key, AES.MODE_EAX)
+        nonce = cipher.nonce
+        cipher_text, tag = cipher.encrypt_and_digest(plain_text)   
+
+        # Encode the length of the nonce, appended with #'s (16 bytes)
+        nonce_str = str(len(nonce))
+        nonce_str += ("#" * (self.max_bytes - len(nonce_str)))
+        nonce_str = nonce_str.encode()
+
+        # Encode the length of the tag, appended with #'s (16 bytes)
+        tag_str = str(len(tag))
+        tag_str += ("#" * (self.max_bytes - len(tag_str)))
+        tag_str = tag_str.encode()
+
+        # Send the nonce length, the tag length, the nonce, the tag, and the ciphertext
+        data = nonce_str + tag_str + nonce + tag + cipher_text
+        
+        return data  
 
 
     # Decrypting and verifying messages
     # TODO: IMPLEMENT DECRYPTION AND INTEGRITY CHECK WITH THE SESSION KEY
     # RETURN AN ERROR MESSAGE IF INTEGRITY VERITIFCATION OR AUTHENTICATION FAILS
-    def DecryptAndVerifyMessage(self, cipher_text):
-        plain_text = cipher_text
+    def DecryptAndVerifyMessage(self, data):
+
+        # Decode the nonce length and the tag length
+        nonce_len = int(data[0:self.max_bytes].decode().strip("#"))
+        tag_len = int(data[self.max_bytes:(2 * self.max_bytes)].decode().strip("#"))
+        
+        # Get the nonce, the tag, and the ciphertext
+        nonce = data[(2 * self.max_bytes):(2 * self.max_bytes + nonce_len)]
+        tag = data[(2 * self.max_bytes + nonce_len):(2 * self.max_bytes + nonce_len + tag_len)]
+        cipher_text = data[(2 * self.max_bytes + nonce_len + tag_len):]
+
+        # Decrypt the ciphertext using AES in EAX mode
+        cipher = AES.new(self._key, AES.MODE_EAX, nonce=nonce)
+        plain_text = cipher.decrypt(cipher_text)
+        
+        # Perform integrity check
+        try:
+            cipher.verify(tag)
+        except ValueError:
+            plain_text = b"Key incorrect or message corrupted"
+
         return plain_text
