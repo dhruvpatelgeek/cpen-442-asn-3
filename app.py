@@ -148,17 +148,24 @@ class Assignment3VPN:
                 if data == None or len(data) == 0:
                     self._AppendLog("RECEIVER_THREAD: Received empty message")
                     break
-
+                print("\n[0] message part of proc\n",data)
                 # Checking if the received message is part of your protocol
                 # TODO: MODIFY THE INPUT ARGUMENTS AND LOGIC IF NECESSARY
                 if self.prtcl.IsMessagePartOfProtocol(data):
+                    print("[1] message part of proc")
                     # Disabling the button to prevent repeated clicks
                     self.secureButton["state"] = "disabled"
                     # Processing the protocol message
-                    self.prtcl.ProcessReceivedProtocolMessage(data)
+
+                    processedout=self.prtcl.ProcessReceivedProtocolMessage(data,self.mode)
+                    if processedout[0]:
+                        print("[APPLICATION] sending message ",processedout[1])
+                        self._SendMessage(processedout[1],False,False)
 
                 # Otherwise, decrypting and showing the messaage
                 else:
+                    print("[2] message not part of proc")
+
                     plain_text = self.prtcl.DecryptAndVerifyMessage(data)
                     self._AppendMessage("Other: {}".format(plain_text.decode()))
                     
@@ -168,9 +175,18 @@ class Assignment3VPN:
 
 
     # Send data to the other party
-    def _SendMessage(self, message):
-        plain_text = message.encode()
-        data = self.prtcl.EncryptAndProtectMessage(plain_text)
+    def _SendMessage(self, message, encrypt=True,encode=True):
+
+        if encode:
+            plain_text = message.encode()
+        else :
+            plain_text=message
+
+        if encrypt:
+            data = self.prtcl.EncryptAndProtectMessage(plain_text)
+        else:
+            data = plain_text
+
         self.conn.send(data)
             
 
@@ -180,8 +196,10 @@ class Assignment3VPN:
         self.secureButton["state"] = "disabled"
 
         # TODO: THIS IS WHERE YOU SHOULD IMPLEMENT THE START OF YOUR MUTUAL AUTHENTICATION AND KEY ESTABLISHMENT PROTOCOL, MODIFY AS YOU SEEM FIT
-        init_message = self.prtcl.GetProtocolInitiationMessage(self.secretEntry.get())
-        self._SendMessage(init_message)
+        init_message = self.prtcl.GetProtocolInitiationMessage(self.mode)
+        print("\n SENDING \n",init_message)
+
+        self._SendMessage(init_message,False,False)
 
 
     # Called when SendMessage button is clicked

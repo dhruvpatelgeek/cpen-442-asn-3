@@ -1,33 +1,30 @@
-import zlib
-import hashlib
-import enum
+class ServerMessage:
+    def __init__(self, ra, dh_pub_key):
+        self.name = "SERVER"
+        self.ra = ra
+        self.dh_pub_key = dh_pub_key
 
-class Payload:
-    def __init__(self,msg,type):
-          self.type=type
-          self.msg = msg
-          self.crc = zlib.crc32(str.encode(msg))
+class ClientChallenge:
+    def __init__(self, ra):
+        self.name = "CLIENT"
+        self.ra = ra
+        self.authMessageType = "CLIENT_CHALLENGE"
 
-class AuthMessage:
-    def __init__(self, keyHash, timeStamp):
-        self.keyHash = keyHash
-        self.timeStamp = timeStamp
-      
-        
+class ServerChallenge:
+    def __init__(self, rb,EncryptedServerMessage):
+        self.rb = rb
+        self.ServerMessage = EncryptedServerMessage
+        self.authMessageType = "SERVER_RESPONSE"
 
-class SessionKeyMessage:
-    def __init__(self, sessionKey, timeStamp):
-        self.sessionKey = sessionKey
-        self.timeStamp = timeStamp
-      
-        
+class ClientResponse:
+    def __init__(self, rb, dh_pub_key):
+        self.name = "CLIENT"
+        self.rb = rb
+        self.dh_pub_key = dh_pub_key
+        self.authMessageType = "CLIENT_RESPONSE"
 
-class nackMessage:
-    def __init__(self, status, timeStamp):
-        self.status = status
-        self.timeStamp = timeStamp # unix.now()<mins,secs dropped>
-       
-
-class MsgType(enum.Enum):
-    AUTH = 1
-    CIPHER = 2
+# wrapper message function for all the messages
+class Message:
+    def __init__(self, messageText, messageType):
+        self.messageText = messageText
+        self.messageType = messageType # either AUTH or MSG

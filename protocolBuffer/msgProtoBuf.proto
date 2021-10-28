@@ -1,0 +1,52 @@
+syntax = "proto2";
+
+package messages;
+
+/*
+--------------------------------------------  PROTOCOL----------------------------------------------
+
+ALICE -----Payload(ClientChallenge,AUTH)------------------------------------------------------> BOB
+ALICE <----Payload(ServerResponse_shell(rb,ServerResponse_load(ra,name,DH)),AUTH)-------------- BOB
+ALICE -----Payload(ClientResponse,AUTH)-------------------------------------------------------> BOB
+
+-------------------------------------------AUTH-----------------------------------------
+
+ALICE -----Payload(GeneralMessage,MSG)-------------> BOB
+ALICE <-----Payload(GeneralMessage,MSG)------------- BOB
+
+*/
+
+//[SERVER MESSAGES]----------------------------------------------
+message ServerResponse_load {
+  optional string name = 1;
+  optional string ra = 2;
+  optional string diffie_hellman_public_key=3;
+}
+message ServerResponse_shell {
+  required string rb = 1;
+  required bytes load = 2;
+}
+
+//[CLIENT MESSAGES]----------------------------------------------
+message ClientChallenge {
+  required string name = 1;
+  required string ra = 2;
+}
+
+message ClientResponse {
+  required string name = 1;
+  required string rb = 2;
+  required string diffie_hellman_public_key=3;
+}
+
+//[GENERAL MESSAGES]------------------------------------------------
+message GeneralMessage {
+  required string load = 1;
+}
+
+//[SHELL MESSAGES]-------------------------------------------------
+message Payload {
+  required bytes load = 1;
+  required string type = 2;
+  required string authMessageType = 4;
+}
