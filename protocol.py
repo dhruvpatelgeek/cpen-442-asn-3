@@ -1,7 +1,7 @@
 # local import from "protocol.py"
 import codecs
 
-from msg import *
+
 import hashlib
 import datetime, time
 import json
@@ -184,8 +184,10 @@ class Protocol:
             print("\n[3.9] CLIENT SENDING\t ", send_marshalled_client_res)
 
             # SET SESSION KEY----------------------------------------
-            # byte_casted_key = session_key.to_bytes(16, byteorder='big')
-            #self.SetSessionKey(byte_casted_key)
+            hashed_session_key = hashlib.sha256()
+            hashed_session_key.update(str(session_key).encode())
+            skey=hashed_session_key.digest()
+            self.SetSessionKey(skey)
             print("[X] CLIENT BYTE CASTED STRING", self._key, "\n")
             #--------------------------------------------------------
             print("---------------------AUTH DONE---------------------")
@@ -262,8 +264,10 @@ class Protocol:
                 # -------------------------------------------------------
 
                 # SET SESSION KEY----------------------------------------
-                # byte_casted_key=session_key.to_bytes(16, byteorder='big')
-                #self.SetSessionKey(byte_casted_key)
+                hashed_session_key = hashlib.sha256()
+                hashed_session_key.update(str(session_key).encode())
+                skey = hashed_session_key.digest()
+                self.SetSessionKey(skey)
                 print("[X] SERVER BYTE CASTED STRING", self._key, "\n")
                 # --------------------------------------------------------
 
