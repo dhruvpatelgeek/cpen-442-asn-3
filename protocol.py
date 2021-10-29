@@ -148,6 +148,7 @@ class Protocol:
             print("\n[1.875] recived AS CLIENT \n", rcvServerResLoad_Decrypted)
             rcvServerResLoad.ParseFromString(rcvServerResLoad_Decrypted)
             print("\n [2] client recived decrypeted ", rcvServerResLoad)
+
             # guard clause -----------------------------------------
             if rcvServerResLoad.name != "SERVER":
                 print("[AUTH FAILED] REPLAY ATTACK", rcvServerResLoad)

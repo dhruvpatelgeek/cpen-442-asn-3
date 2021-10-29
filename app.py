@@ -8,7 +8,7 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 import json
 import protocolBuffer.protogen_out.msgProtoBuf_pb2 as gpbf
-
+import hashlib
 # local import from "protocol.py"
 from protocol import Protocol
 
@@ -80,6 +80,15 @@ class Assignment3VPN:
 
     # Create a TCP connection between the client and the server
     def CreateConnection(self):
+
+        # SET SHARED SECRET ---------------------------------------
+        sharedSecret = self.sharedSecret.get()
+        hashed_session_key = hashlib.sha256()
+        hashed_session_key.update(str(sharedSecret).encode())
+        skey = hashed_session_key.digest()
+        self.prtcl.SetSessionKey(skey)
+        #---------------------------------------------------------
+
         # Change button states
         self._ChangeConnectionMode()
         
@@ -188,14 +197,15 @@ class Assignment3VPN:
 
     # Secure connection with mutual authentication and key establishment
     def SecureConnection(self):
+        if self.mode.get()==0:
         # disable the button to prevent repeated clicks
-        self.secureButton["state"] = "disabled"
-
-        # TODO: THIS IS WHERE YOU SHOULD IMPLEMENT THE START OF YOUR MUTUAL AUTHENTICATION AND KEY ESTABLISHMENT PROTOCOL, MODIFY AS YOU SEEM FIT
-        init_message = self.prtcl.GetProtocolInitiationMessage(self.mode)
-        print("\n SENDING \n",init_message)
-
-        self._SendMessage(init_message)
+            self.secureButton["state"] = "disabled"
+            init_message = self.prtcl.GetProtocolInitiationMessage(self.mode)
+            print("\n SENDING \n",init_message)
+            self._SendMessage(init_message)
+        else:
+            self.secureButton["state"] = "disabled"
+            self._AppendLog("SERVER: Should not secure connection".format(self.addr))
 
 
     # Called when SendMessage button is clicked
