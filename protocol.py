@@ -272,7 +272,7 @@ class Protocol:
                 # --------------------------------------------------------
 
                 print("---------------------AUTH DONE---------------------")
-                return False
+                return False,b'NIL'
         else:
             print("\n[1] recived AS NONE \n", messagePayload)
 

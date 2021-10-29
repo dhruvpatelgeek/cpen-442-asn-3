@@ -140,16 +140,19 @@ class Assignment3VPN:
 
     # Receive data from the other party
     def _ReceiveMessages(self):
+        int_counter=0;
         while True:
             try:
                 # Receiving all the data
                 data = self.conn.recv(4096)
-
+                int_counter= int_counter+1
+                print("------------------        RECIVED DATA #",int_counter)
+                print("[x 1]------------------")
                 # Check if socket is still open
                 if data == None or len(data) == 0:
                     self._AppendLog("RECEIVER_THREAD: Received empty message")
                     break
-
+                print("[x 2]------------------")
                 # Checking if the received message is part of your protocol
                 if self.prtcl.IsMessagePartOfProtocol(data):
                     print("\n[0] [PROTOCOL] \n",data)
@@ -158,11 +161,14 @@ class Assignment3VPN:
                     # Processing the protocol message
 
                     processedout=self.prtcl.ProcessReceivedProtocolMessage(data,self.mode)
+
                     if processedout[0]:
                         self._SendMessage(processedout[1])
 
+                    print("[x 2.2]------------------")
                 # Otherwise, decrypting and showing the messaage
                 else:
+                    print("[x 2.3]------------------")
                     print("[2] [MSG]",data)
                     text=self.prtcl.GetDecryptedMessage(data)
                     print("[2.5]TEXT EXTRACTED",text)
@@ -170,6 +176,7 @@ class Assignment3VPN:
                     
             except Exception as e:
                 self._AppendLog("RECEIVER_THREAD: Error receiving data: {}".format(str(e)))
+                print("------------------[EXIT ON ERROR] RECIVED DATA #", int_counter)
                 return False
 
 
