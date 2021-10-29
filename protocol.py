@@ -76,6 +76,7 @@ class Protocol:
             cipher.verify(tag)
         except ValueError:
             plain_text = b"Key incorrect or message corrupted"
+            raise ValueError("Key incorrect or message corrupted")
 
         return plain_text
 
@@ -152,10 +153,10 @@ class Protocol:
             # guard clause -----------------------------------------
             if rcvServerResLoad.name != "SERVER":
                 print("[AUTH FAILED] REPLAY ATTACK", rcvServerResLoad)
-                return False
+                raise ValueError("[AUTH FAILED] REPLAY ATTACK", rcvServerResLoad)
             if rcvServerResLoad.ra != self.ra:
                 print("[AUTH FAILED] Ra!=sent Ra", rcvServerResLoad)
-                return False
+                raise ValueError("[AUTH FAILED] Ra!=sent Ra", rcvServerResLoad)
             # -------------------------------------------------------
 
             # calculate session key ---------------------------------
@@ -204,7 +205,8 @@ class Protocol:
                 # guard clause -----------------------------------------
                 if rcvClientChallange.name != "CLIENT":
                     print("[AUTH FAILED] REPLAY ATTACK", rcvClientChallange)
-                    return False
+                    raise ValueError("[AUTH FAILED] REPLAY ATTACK", rcvClientChallange)
+
                 # -------------------------------------------------------
 
                 # Ra,g^b mod p ------------------------------------
@@ -251,10 +253,10 @@ class Protocol:
                 # guard clause -----------------------------------------
                 if rcvClientResLoad.name != "CLIENT":
                     print("[AUTH FAILED] REPLAY ATTACK", rcvClientResLoad)
-                    return False
+                    raise ValueError("[AUTH FAILED] REPLAY ATTACK", rcvClientResLoad)
                 if rcvClientResLoad.rb != self.rb:
                     print("[AUTH FAILED] Rb!=sent Rb", rcvClientResLoad)
-                    return False
+                    raise ValueError("[AUTH FAILED] Rb!=sent Rb", rcvClientResLoad)
                 # -------------------------------------------------------
 
                 # calculate session key ---------------------------------
