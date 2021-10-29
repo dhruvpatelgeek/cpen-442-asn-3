@@ -7,6 +7,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
 import json
+import protocolBuffer.protogen_out.msgProtoBuf_pb2 as gpbf
 
 # local import from "protocol.py"
 from protocol import Protocol
@@ -148,26 +149,25 @@ class Assignment3VPN:
                 if data == None or len(data) == 0:
                     self._AppendLog("RECEIVER_THREAD: Received empty message")
                     break
-                print("\n[0] message part of proc\n",data)
+
                 # Checking if the received message is part of your protocol
                 # TODO: MODIFY THE INPUT ARGUMENTS AND LOGIC IF NECESSARY
                 if self.prtcl.IsMessagePartOfProtocol(data):
-                    print("[1] message part of proc")
+                    print("\n[0] [PROTOCOL] \n",data)
                     # Disabling the button to prevent repeated clicks
                     self.secureButton["state"] = "disabled"
                     # Processing the protocol message
 
                     processedout=self.prtcl.ProcessReceivedProtocolMessage(data,self.mode)
                     if processedout[0]:
-                        print("[APPLICATION] sending message ",processedout[1])
-                        self._SendMessage(processedout[1],False,False)
+                        self._SendMessage(processedout[1])
 
                 # Otherwise, decrypting and showing the messaage
                 else:
-                    print("[2] message not part of proc")
-
-                    plain_text = self.prtcl.DecryptAndVerifyMessage(data)
-                    self._AppendMessage("Other: {}".format(plain_text.decode()))
+                    print("[2] [MSG]",data)
+                    text=self.prtcl.GetDecryptedMessage(data)
+                    print("[2.5]TEXT EXTRACTED",text)
+                    self._AppendMessage("Other: {}".format(text))
                     
             except Exception as e:
                 self._AppendLog("RECEIVER_THREAD: Error receiving data: {}".format(str(e)))
@@ -175,19 +175,9 @@ class Assignment3VPN:
 
 
     # Send data to the other party
-    def _SendMessage(self, message, encrypt=True,encode=True):
+    def _SendMessage(self, message):
 
-        if encode:
-            plain_text = message.encode()
-        else :
-            plain_text=message
-
-        if encrypt:
-            data = self.prtcl.EncryptAndProtectMessage(plain_text)
-        else:
-            data = plain_text
-
-        self.conn.send(data)
+        self.conn.send(message)
             
 
     # Secure connection with mutual authentication and key establishment
@@ -199,7 +189,7 @@ class Assignment3VPN:
         init_message = self.prtcl.GetProtocolInitiationMessage(self.mode)
         print("\n SENDING \n",init_message)
 
-        self._SendMessage(init_message,False,False)
+        self._SendMessage(init_message)
 
 
     # Called when SendMessage button is clicked
@@ -207,7 +197,12 @@ class Assignment3VPN:
         text = self.textMessage.get()
         if  text != "" and self.s is not None:
             try:
-                self._SendMessage(text)
+
+                print("[APP] 1 sending text",text)
+                payload=self.prtcl.GetEncryptedMessage(text)
+                self._SendMessage(payload)
+                print("[APP] 2 sending text", payload)
+
                 self._AppendMessage("You: {}".format(text))
                 self.textMessage.set("")
             except Exception as e:

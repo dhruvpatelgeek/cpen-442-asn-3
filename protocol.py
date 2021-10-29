@@ -161,26 +161,34 @@ class Protocol:
             g_b_mod_p=int(rcvServerResLoad.diffie_hellman_public_key)
             self.dh.update(g_b_mod_p)
             session_key =self.dh.getFinalKey()
-            self.SetSessionKey(session_key)
             print("\n[3.15] CLIENT SESSION KEY IS\t ",session_key)
             # -------------------------------------------------------
 
             # Rb,g^b mod p -----------------------------------------
             clientResponse=gpbf.ClientResponse()
-
             clientResponse.name="CLIENT"
             clientResponse.rb=rcvServerResShell.rb
             clientResponse.diffie_hellman_public_key = str(self.dh.getPublicKey())
             # -------------------------------------------------------
 
             marshalled_client_res=clientResponse.SerializeToString()
-
+            print("\n[3.4] CLIENT SENDING\t",marshalled_client_res)
+            marshalled_client_res_encrypted=self.EncryptAndProtectMessage(marshalled_client_res)
+            print("\n[3.5] CLIENT SENDING\t")
             client_res_payload = gpbf.Payload()
-            client_res_payload.load = marshalled_client_res
+            client_res_payload.load = marshalled_client_res_encrypted
             client_res_payload.type = "AUTH"
             client_res_payload.authMessageType = "clientResponse"
 
             send_marshalled_client_res = client_res_payload.SerializeToString()
+            print("\n[3.9] CLIENT SENDING\t ", send_marshalled_client_res)
+
+            # SET SESSION KEY----------------------------------------
+            # byte_casted_key = session_key.to_bytes(16, byteorder='big')
+            #self.SetSessionKey(byte_casted_key)
+            print("[X] CLIENT BYTE CASTED STRING", self._key, "\n")
+            #--------------------------------------------------------
+            print("---------------------AUTH DONE---------------------")
 
             return True,send_marshalled_client_res
         elif mode.get() == 1:
@@ -226,22 +234,65 @@ class Protocol:
                 return True,marshalled_res
 
             elif messagePayload.authMessageType == "clientResponse":
-                print("[4] recived client response", messagePayload)
+                print("[4] SERVER recived client response", messagePayload)
 
                 # Decrypt and check Ra=Self.Ra && name=SERVER ----------
                 rcvClientResLoad = gpbf.ClientResponse()
+                print("[4.1] SERVER decrypted client")
                 rcvClientResLoad_Encrypted = messagePayload.load
-
+                print("[4.2] SERVER decrypted client")
+                rcvClientResLoad_Decrypted =self.DecryptAndVerifyMessage(rcvClientResLoad_Encrypted)
+                print("[4.3] SERVER decrypted client")
+                rcvClientResLoad.ParseFromString(rcvClientResLoad_Decrypted)
+                print("[4.5] SERVER decrypted client response",rcvClientResLoad_Decrypted)
                 # guard clause -----------------------------------------
-                if rcvServerResLoad.name != "SERVER":
-                    print("[AUTH FAILED] REPLAY ATTACK", rcvServerResLoad)
+                if rcvClientResLoad.name != "CLIENT":
+                    print("[AUTH FAILED] REPLAY ATTACK", rcvClientResLoad)
                     return False
-                if rcvServerResLoad.ra != self.ra:
-                    print("[AUTH FAILED] Ra!=sent Ra", rcvServerResLoad)
+                if rcvClientResLoad.rb != self.rb:
+                    print("[AUTH FAILED] Rb!=sent Rb", rcvClientResLoad)
                     return False
                 # -------------------------------------------------------
 
+                # calculate session key ---------------------------------
+                g_a_mod_p = int(rcvClientResLoad.diffie_hellman_public_key)
+                self.dh.update(g_a_mod_p)
+                session_key = self.dh.getFinalKey()
+                print("\n[4] SERVER SESSION KEY IS\t ", session_key)
+                # -------------------------------------------------------
+
+                # SET SESSION KEY----------------------------------------
+                # byte_casted_key=session_key.to_bytes(16, byteorder='big')
+                #self.SetSessionKey(byte_casted_key)
+                print("[X] SERVER BYTE CASTED STRING", self._key, "\n")
+                # --------------------------------------------------------
+
+                print("---------------------AUTH DONE---------------------")
+                return False
         else:
             print("\n[1] recived AS NONE \n", messagePayload)
 
         return False
+
+    def GetEncryptedMessage(self, text):
+        generalMessage = gpbf.GeneralMessage()
+        generalMessage.load = text
+        marshalled_generalMessage=generalMessage.SerializeToString()
+        generalMessage_encrypted = self.EncryptAndProtectMessage(marshalled_generalMessage)
+        payload = gpbf.Payload()
+        payload.load = generalMessage_encrypted
+        payload.type = "MSG"
+        payload.authMessageType = "generalMessage"
+        marshalled_payload=payload.SerializeToString()
+        return marshalled_payload
+
+    def GetDecryptedMessage(self, payload_text):
+        payload = gpbf.Payload()
+        payload.ParseFromString(payload_text)
+        generalMessage = gpbf.GeneralMessage()
+        encrypted_load=payload.load
+        decrypted_load=self.DecryptAndVerifyMessage(encrypted_load)
+        generalMessage.ParseFromString(decrypted_load)
+        text=generalMessage.load
+        return text
+
