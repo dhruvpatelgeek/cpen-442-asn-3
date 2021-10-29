@@ -149,7 +149,7 @@ class Assignment3VPN:
 
     # Receive data from the other party
     def _ReceiveMessages(self):
-        int_counter=0;
+        int_counter=0
         while True:
             try:
                 # Receiving all the data

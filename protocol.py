@@ -17,7 +17,7 @@ class Protocol:
     # TODO: MODIFY ARGUMENTS AND LOGIC AS YOU SEEM FIT
     def __init__(self, secretKey):
         self.max_bytes = 16  # Max number of bytes for nonce length and tag length
-        self._key = b"QeThWmYq3t6w9z$C&F)J@NcRfUjXn2r4"  # AES key should be 128, 192, or 256 bits long
+        self._key = b'NULL' # AES key should be 128, 192, or 256 bits long
         self.hashFunc = hashlib.sha256()
         self.secretKey = secretKey
         self.rb = 'NULL'
