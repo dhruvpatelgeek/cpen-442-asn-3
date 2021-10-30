@@ -1,1 +1,4 @@
-pygubu==0.14
+protobuf==3.19.1
+pycryptodome==3.11.0
+pyDHE==1.0.0
+pygubu==0.16
